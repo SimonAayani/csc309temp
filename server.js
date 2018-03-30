@@ -61,23 +61,23 @@ app.post("/login", (req, res) => {
 	var username = req.body.user_login;
 	var password = req.body.pass_login;
 	 if(!req.session.User){
-	User.findOne({username: username, password: password}, function(err, user){
-		if(err){
-			console.log(err);
-		}
-		if(!user){
-			console.log("no such user");
-		}
-			console.log(user.username)
-			req.session.user = user;
-			// res.cookie("username")	
-			// console.log(res.cookie)
-			// res.cookie(username:"hi")
-			// console.log(req.cookies)
-			res.redirect('/dash')
+		User.findOne({username: username, password: password}, function(err, user){
+			if(err){
+				console.log(err);
+			}
+			if(!user){
+				console.log("no such user");
+			}
+				console.log(user.username)
+				req.session.user = user;
+				// res.cookie("username")	
+				// console.log(res.cookie)
+				// res.cookie(username:"hi")
+				// console.log(req.cookies)
+				res.redirect('/dash')
+				
 			
-		
-	})
+		})
 	
 	} else {
 		res.redirect('/dash')
@@ -128,6 +128,7 @@ app.post('/register', (req, res) => {
 
 app.get('/dash', function(req, res){
 	if(!req.session.user){
+		res.redirect('/')
 		return res.status(401).send();
 	} else {
 		
