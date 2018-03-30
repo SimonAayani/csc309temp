@@ -2,14 +2,29 @@ var path = require("path");
 
 const express = require('express');
 const bodyParser= require('body-parser');
+var http = require('http');
 const app = express();
 const User = require("./lib/user");
+var session = require("express-session");
+var cookieParser = require('cookie-parser');
+var passport = require('passport');
 
 var db
 
 app.use(express.static(path.join(__dirname, '/public')));
 app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist/'));
-app.use(bodyParser.urlencoded({extended: true}))
+
+app.use(cookieParser());	
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.use(session({
+  secret: 'lkJSadib7832lQA02k18snf0sdsak192j29j10DJ2',
+  resave: false,
+  saveUninitialized: false,
+  // cookie: { secure: true }
+}))
+app.use(passport.initialize());
+app.use(passport.session());
 
   var MongoClient = require('mongoose');
   //Since I failed to update to csc309 mongo account due to auth issues, i will be using the mongo acc i created
@@ -32,59 +47,97 @@ app.use(bodyParser.urlencoded({extended: true}))
 
     });
 app.get('/', (req, res) => {
-				  res.sendFile(__dirname + '/index.html')
-				})
+	 if(!req.session.user){
+		console.log("hi" + req.session.user)
+  		res.sendFile(__dirname + '/public/index.html')
+  		
+  	} else {
+  		console.log("logged" + req.session.user.username)
+  		// res.sendFile(__dirname + '/logged.html')
+  	}
+})
 
 app.post("/login", (req, res) => {
 	var username = req.body.user_login;
 	var password = req.body.pass_login;
-
+	 if(!req.session.User){
 	User.findOne({username: username, password: password}, function(err, user){
 		if(err){
 			console.log(err);
 		}
 		if(!user){
 			console.log("no such user");
-			
-		}else {
-			console.log(user.email)
 		}
-		res.redirect('/')
+			console.log(user.username)
+			req.session.user = user;
+			// res.cookie("username")	
+			// console.log(res.cookie)
+			// res.cookie(username:"hi")
+			// console.log(req.cookies)
+			res.redirect('/dash')
+			
+		
 	})
+	
+	} else {
+		res.redirect('/dash')
+	}
+
 	
 })
 app.post('/register', (req, res) => {
-	var firstName = req.body.f_name;
-	var lastName = req.body.l_name;
-	var email = req.body.email;
-	var username = req.body.user;
-	var password = req.body.pass;
-	var postalCode = req.body.zip;
+	if(!req.session.User){
+		var firstName = req.body.f_name;
+		var lastName = req.body.l_name;
+		var email = req.body.email;
+		var username = req.body.user;
+		var password = req.body.pass;
+		var postalCode = req.body.zip;
 
-	var newuser = new User();
-	newuser.firstName = firstName;
-	newuser.lastName = lastName;
-	newuser.email = email;
-	newuser.username = username;
-	newuser.password = password;
-	newuser.postalCode = postalCode;
+		var newuser = new User();
+		newuser.firstName = firstName;
+		newuser.lastName = lastName;
+		newuser.email = email;
+		newuser.username = username;
+		newuser.password = password;
+		newuser.postalCode = postalCode;
 
-	newuser.save(function(err, savedUser){
-		if(err){
-			console.log(err);
-		}
-		console.log("submitted");
-	});
+		newuser.save(function(err, savedUser){
+			if(err){
+				console.log(err);
+			}
+			console.log("submitted");
+			return res.status(200).send();
+		});
 
-	res.redirect('/')
+		res.redirect('/dash')
 
-	  // db.collection('users').save(newuser, (err, result) => {
-	  //   if (err) return console.log(err)
+		  // db.collection('users').save(newuser, (err, result) => {
+		  //   if (err) return console.log(err)
 
-	  //   console.log('saved to database')
-	  //   res.redirect('/')
-	  // }) 	
+		  //   console.log('saved to database')
+		  //   res.redirect('/')
+		  // }) 	
+	} else {
+		res.redirect('/dash')
+	}
+
 })
 
+//POST LOGING PAGES HERE
 
+app.get('/dash', function(req, res){
+	if(!req.session.user){
+		return res.status(401).send();
+	} else {
+		
+		res.sendFile(__dirname + '/public/logged.html')
+	}
+})
 
+app.get('/logout', function(req,res){
+	res.sendFile(__dirname + '/public/index.html')
+	req.session.destroy();
+	console.log(req.session);
+})
+	

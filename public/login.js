@@ -1,4 +1,3 @@
-
 var goback = "";
 
 
@@ -41,6 +40,12 @@ function login_goback(){
     });
 }
 
+function login(){
+  if(status == 200){
+    $("#lgnbtn").hide();
+    $("#lgoutbtn").show();
+  }
+}
 
 // function on_register(){
 //   var fname = document.getElementById("f_name").value;
